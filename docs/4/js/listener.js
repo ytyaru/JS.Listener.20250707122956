@@ -37,7 +37,9 @@ class Listener {
             if (-1<I) {
                 el._listeners[i].listeners.splice(I, 1);
                 el.removeEventListener(name, listener, useCapture);
-                if (0===el._listeners[i].listeners.length) {el._listeners.splice(i, 1);}
+                //if (0===el._listeners[i].listeners.length) {el._listeners.splice(i, 1);}
+                if (0===el._listeners[i].listeners.length) {return notSplice ? [i,I] : el._listeners.splice(i, 1);}
+                console.log('remove:', el._listeners.length, el._listeners)
             }
         }
     }
@@ -48,6 +50,7 @@ class Listener {
             for (let I=0; I<listeners.length; I++) {
                 this.remove(el, name, listeners[I], useCapture, true);
             }
+            listeners.length = 0;
         }
         el._listeners.length = 0;
     }
@@ -55,41 +58,62 @@ class Listener {
         for(let i=0; i<el._listeners.length; i++) {
             //const {N, L, U} = el._listeners[i];
             const {name, listeners, useCapture} = el._listeners[i];
+            console.log(i, name, N, el._listeners.length)
             if (N===name) {
                 for (let I=0; I<listeners.length; I++) {
-                    this.remove(el, name, listeners[I], useCapture, true);
+                    //this.remove(el, name, listeners[I], useCapture, true);
+                    el.removeEventListener(name, listeners[I], useCapture);
                 }
-                if (0===listeners.length) {el._listeners.splice(i, 1)}
+//                console.log(listeners.length, el._listeners.map(l=>console.log(l.name, l.useCapture, l.listeners.length)));
+//                if (0===listeners.length) {el._listeners.splice(i, 1)}
+                listeners.length = 0;
+//                el._listeners.splice(i, 1);
             }
         }
+        el._listeners = el._listeners.filter(l=>0!==l.listeners.length);
+        console.log('AAAAAAAAAA:', el._listeners.length)
     }
     static removeNameUseCapture(el, N, U) {
         for(let i=0; i<el._listeners.length; i++) {
-                console.log(el._listeners[i])
+//                console.log(el._listeners[i])
             const {name, listeners, useCapture} = el._listeners[i];
 //                console.log(N, U, name, useCapture)
             if (N===name && U===useCapture) {
-                console.log(N, U)
+                const Hs = [...listeners];
+                console.log(N, U, useCapture, listeners.length, listeners)
                 for (let I=0; I<listeners.length; I++) {
-                    this.remove(el, name, listeners[I], useCapture, true);
+                    console.log('removeNameUseCapture', el, N, U)
+//                    this.remove(el, name, listeners[I], useCapture, true);
+                    el.removeEventListener(name, listeners[I], useCapture);
+                    Hs.splice(I, 1);
                 }
-                if (0===listeners.length) {el._listeners.splice(i, 1)}
+                el._listeners[i].listeners = Hs;
+//                if (0===listeners.length) { console.log(el._listeners.length, el._listeners, el._listeners.map(l=>console.log(l.name, l.useCapture, l.listeners.length)));console.log('splice!!!!!1:', listeners.length, listeners);el._listeners.splice(i, 1);}
             }
         }
+        el._listeners = el._listeners.filter(l=>0!==l.listeners.length);
+        console.log(el._listeners.length, el._listeners)
     }
-    static removeNameListener(el, name, listener) {
+    static removeNameListener(el, N, L) {
+                console.log('removeNameListener!!!!!!!!!')
         for(let i=0; i<el._listeners.length; i++) {
             const {name, listeners, useCapture} = el._listeners[i];
             //const {N, L, U} = el._listeners[i];
             if (N===name) {
+                const Hs = [...listeners];
                 for (let I=0; I<listeners.length; I++) {
-                    if (listener===L[I]) {
-                    this.remove(el, name, listeners[I], useCapture, true);
+                    if (L===listeners[I]) {
+//                        this.remove(el, name, listeners[I], useCapture, true);
+                        el.removeEventListener(name, listeners[I], useCapture);
+                        Hs.splice(I, 1);
                     }
                 }
-                if (0===L.length) {el._listeners.splice(i, 1)}
+                el._listeners[i].listeners = Hs;
+//                if (0===L.length) {el._listeners.splice(i, 1)}
+                console.log('removeNameListener:', N, Hs.length)
             }
         }
+        el._listeners = el._listeners.filter(l=>0!==l.listeners.length);
     }
     static #getIdx(el, name, useCapture) {return el._listeners.findIndex(l=>name===l.name && useCapture===l.useCapture)}
 }
@@ -97,7 +121,7 @@ HTMLElement.prototype.listen = function(name, listener, useCapture=false) {
     Listener.add(this, name, listener, useCapture);
 }
 HTMLElement.prototype.unlisten = function(name, listener, useCapture) {//自身をunlistenする
-    if (name && listener && useCapture) {Listener.remove(this, name, listener, useCapture);}
+    if (name && listener && 'boolean'===typeof useCapture) {Listener.remove(this, name, listener, useCapture);}
     else if (name && listener) {Listener.removeNameListener(this, name, listener)}
     else if (name && 'boolean'===typeof useCapture) {Listener.removeNameUseCapture(this, name, useCapture)}
     else if (name) {Listener.removeName(this, name)}

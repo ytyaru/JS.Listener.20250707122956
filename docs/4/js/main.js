@@ -270,7 +270,9 @@ window.addEventListener('DOMContentLoaded', (event) => {
         const p = document.createElement('p');
         p.listen('click', (e)=>{});
         p.listen('input', (e)=>{});
+        console.log(p._listeners.length, p._listeners.map(l=>console.log(l.name, l.useCapture, l.listeners.length)));
         p.unlisten('input');
+        console.log(p._listeners.length, p._listeners.map(l=>console.log(l.name, l.useCapture, l.listeners.length)));
         console.log(p._listeners, 1===p._listeners.length, 'click'===p._listeners[0].name)
         return 1===p._listeners.length && 'click'===p._listeners[0].name;
     });
@@ -280,7 +282,9 @@ window.addEventListener('DOMContentLoaded', (event) => {
         p.listen('click', (e)=>{});
         p.listen('input', (e)=>{}, false);
         p.listen('input', (e)=>{}, true);
+        console.log(p._listeners.length, p._listeners.map(l=>console.log(l.name, l.useCapture, l.listeners.length)));
         p.unlisten('input'); // useCapture=false、trueの両方削除
+        console.log(p._listeners.length, p._listeners.map(l=>console.log(l.name, l.useCapture, l.listeners.length)));
         console.log(p._listeners, 1===p._listeners.length, 'click'===p._listeners[0].name)
         return 1===p._listeners.length && 'click'===p._listeners[0].name;
     });
@@ -290,12 +294,26 @@ window.addEventListener('DOMContentLoaded', (event) => {
         p.listen('click', (e)=>{});
         p.listen('input', (e)=>{}, false);
         p.listen('input', (e)=>{}, true);
-        console.log(p._listeners.length);
+        console.log(p._listeners.length, p._listeners.map(l=>console.log(l.name, l.useCapture, l.listeners.length)));
         p.unlisten('input', null, false); // useCapture=falseだけ削除し、trueを残す
         console.log(p._listeners.length);
         console.log(p._listeners);
+        console.log(p._listeners.length, p._listeners.map(l=>console.log(l.name, l.useCapture, l.listeners.length)));
         return 2===p._listeners.length && 'click'===p._listeners[0].name
-            && 'input'===p._listeners[0].name && true===p._listeners[0].useCapture;
+            && 'input'===p._listeners[1].name && true===p._listeners[1].useCapture;
+    });
+    // unlisten(name, listener, useCapture)
+    a.t(()=>{
+        const p = document.createElement('p');
+        const L1 = (e)=>{};
+        const L2 = async(e)=>{};
+        p.listen('click', L1);
+        p.listen('click', L2);
+        console.log(p._listeners.length, p._listeners.map(l=>console.log(l.name, l.useCapture, l.listeners.length)));
+        p.unlisten('click', L1, false);
+        console.log(p._listeners.length, p._listeners.map(l=>console.log(l.name, l.useCapture, l.listeners.length)));
+        console.log(p._listeners, 1===p._listeners.length, 'click'===p._listeners[0].name);
+        return 1===p._listeners.length &&  1===p._listeners[0].listeners.length && 'click'===p._listeners[0].name && L2===p._listeners[0].listeners[0] && false===p._listeners[0].useCapture;
     });
 
 
